@@ -35,7 +35,7 @@ const Home = () => {
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const res = await axios.get("https://chatgpt-1-px0b.onrender.com/api/chat", {
+        const res = await axios.get("https://chatgpt-1-px0b.onrender.com/api/chat/", {
           withCredentials: true,
         });
         dispatch(setChats(res.data.chats.reverse()));
