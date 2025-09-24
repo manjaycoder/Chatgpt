@@ -7,7 +7,7 @@ const app = express();
 // CORS Configuration: Essential for frontend requests with credentials (cookies)
 app.use(cors({
   origin: [
-    'http://localhost:5173',  // Adjust if your frontend is on a different port (e.g., 3001 for CRA/Vite)
+    'https://chatgpt-2-0-esui.onrender.com',  // Adjust if your frontend is on a different port (e.g., 3001 for CRA/Vite)
      // Common for React dev servers
     // Add more origins for production, e.g., 'https://yourdomain.com'
   ],
