@@ -1,0 +1,250 @@
+/* 404 Error Page Styles - Pure Dark Theme Extensions */
+.error-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  position: relative;
+  overflow: hidden;
+  animation: bgGradientShift 15s ease-in-out infinite alternate;
+}
+
+.error-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 107, 107, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+  animation: particleFloat 20s linear infinite reverse; /* Reverse for subtle error "vibe" */
+}
+
+/* Error Card with Glassmorphism */
+.error-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 3rem;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 
+    0 25px 50px var(--shadow-light),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 0 1px var(--border-color);
+  border: 1px solid var(--border-color);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp 0.8s ease-out;
+  will-change: transform;
+}
+
+.error-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--error-color), transparent);
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+.error-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 35px 70px var(--shadow-hover),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Visual Elements */
+.error-visual {
+  margin-bottom: 2rem;
+  position: relative;
+  animation: fadeInUp 0.6s ease-out 0.2s both;
+}
+
+.error-icon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 1rem;
+  animation: float 3s ease-in-out infinite, shake 0.5s ease-in-out 0.5s both;
+}
+
+.error-number {
+  font-size: 6rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--error-color) 0%, #ff8e8e 50%, #ff6b6b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Error Header */
+.error-header {
+  margin-bottom: 2rem;
+  animation: fadeInUp 0.6s ease-out 0.4s both;
+}
+
+.error-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.01em;
+}
+
+.error-subtitle {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+/* Action Button */
+.error-actions {
+  margin-bottom: 2rem;
+  animation: fadeInUp 0.6s ease-out 0.6s both;
+}
+
+.error-btn {
+  display: inline-block;
+  background: var(--accent-gradient);
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  min-height: 52px;
+  position: relative;
+  overflow: hidden;
+  will-change: transform, box-shadow;
+}
+
+.error-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.error-btn:hover::before {
+  left: 100%;
+}
+
+.error-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(91, 139, 245, 0.4);
+}
+
+.error-btn:focus-visible {
+  outline: 2px solid #5b8bf5;
+  outline-offset: 2px;
+}
+
+/* Hint Text */
+.error-hint {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  animation: fadeInUp 0.6s ease-out 0.8s both;
+}
+
+.error-hint a {
+  color: #5b8bf5;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.error-hint a:hover {
+  color: #a855f7;
+  text-decoration: underline;
+}
+
+/* Responsive Design for 404 Page */
+@media (max-width: 480px) {
+  .error-container {
+    padding: 0.5rem;
+  }
+
+  .error-card {
+    padding: 2rem;
+    margin: 0.5rem;
+    border-radius: 20px;
+  }
+
+  .error-number {
+    font-size: 4rem;
+  }
+
+  .error-icon {
+    font-size: 3rem;
+  }
+
+  .error-title {
+    font-size: 1.75rem;
+  }
+
+  .error-subtitle {
+    font-size: 1rem;
+  }
+
+  .error-btn {
+    width: 100%;
+    max-width: 280px;
+    padding: 1rem 2rem;
+    font-size: 1rem;
+  }
+
+  .error-hint {
+    font-size: 0.9rem;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 1024px) {
+  .error-card {
+    padding: 2.5rem;
+    max-width: 450px;
+  }
+
+  .error-number {
+    font-size: 5rem;
+  }
+
+  .error-title {
+    font-size: 1.875rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .error-card {
+    padding: 4rem;
+    max-width: 550px;
+  }
+
+  .error-number {
+    font-size: 7rem;
+  }
+
+  .error-title {
+    font-size: 2.25rem;
+  }
+}
