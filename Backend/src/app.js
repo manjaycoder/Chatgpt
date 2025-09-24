@@ -1,6 +1,7 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import path from 'path'
 import authRoute from '../src/routes/auth.routes.js';  // Fixed path (removed extra quotes if needed)
 import chatRoute from '../src/routes/chat.routes.js'; // Fixed path
 const app = express();
@@ -16,11 +17,15 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],  // Allow necessary headers
   exposedHeaders: ['Set-Cookie'],  // Expose cookies in responses if needed
 }));
+app.use(express.static(Path2D.join(__dirname,"../public")));
 // Middleware
 app.use(express.json({ limit: '10mb' }));  // Parse JSON bodies (added limit for safety)
 app.use(cookieParser());  // Parse cookies (already good for auth)
 // Routes
 app.use('/api/auth', authRoute);
 app.use('/api/chat', chatRoute);
+app.get("*name",(req,res)=>{
+  res.sendFile(path.join(__dirname,"../public/index.html"))
+})
 // Optional: Health check endpoint for testing
 export default app
