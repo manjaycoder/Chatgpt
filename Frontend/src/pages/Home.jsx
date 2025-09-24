@@ -35,7 +35,7 @@ const Home = () => {
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/api/chat", {
+        const res = await axios.get("https://chatgpt-1-px0b.onrender.com/api/chat", {
           withCredentials: true,
         });
         dispatch(setChats(res.data.chats.reverse()));
@@ -48,7 +48,7 @@ const Home = () => {
 
   // ✅ Connect socket ONCE
   useEffect(() => {
-    const tempSocket = io("http://localhost:3000", {
+    const tempSocket = io("https://chatgpt-1-px0b.onrender.com", {
       withCredentials: true,
     });
 
@@ -76,7 +76,7 @@ const Home = () => {
   const getMessages = useCallback(async (chatId) => {
     try {
       const res = await axios.get(
-        `http://localhost:3000/api/chat/messages/${chatId}`,
+        `https://chatgpt-1-px0b.onrender.com/api/chat/messages/${chatId}`,
         { withCredentials: true }
       );
 
@@ -99,7 +99,7 @@ const Home = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:3000/api/chat/",
+        "https://chatgpt-1-px0b.onrender.com/api/chat/",
         { title },
         { withCredentials: true }
       );
