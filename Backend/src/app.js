@@ -2,6 +2,7 @@ import express from 'express';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import path from 'path'
+
 import authRoute from '../src/routes/auth.routes.js';  // Fixed path (removed extra quotes if needed)
 import chatRoute from '../src/routes/chat.routes.js'; // Fixed path
 const app = express();
@@ -16,8 +17,8 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],  // Allow common methods, including preflight OPTIONS
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],  // Allow necessary headers
   exposedHeaders: ['Set-Cookie'],  // Expose cookies in responses if needed
-}));
-app.use(express.static(Path2D.join(__dirname,"../public")));
+})); 
+app.use(express.static(path.join(__dirname,"../public")));
 // Middleware
 app.use(express.json({ limit: '10mb' }));  // Parse JSON bodies (added limit for safety)
 app.use(cookieParser());  // Parse cookies (already good for auth)
