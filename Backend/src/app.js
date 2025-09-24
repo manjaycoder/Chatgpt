@@ -16,7 +16,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],  // Allow necessary headers
   exposedHeaders: ['Set-Cookie'],  // Expose cookies in responses if needed
 }));
-app.use(express.static(Path2D.join(__dirname,"../public")));
+
 // Middleware
 app.use(express.json({ limit: '10mb' }));  // Parse JSON bodies (added limit for safety)
 app.use(cookieParser());  // Parse cookies (already good for auth)
