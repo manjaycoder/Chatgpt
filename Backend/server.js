@@ -4,7 +4,7 @@ import app from './src/app.js';
 import initSocketServer from './src/socket/socket.server.js';
 import connectDb from './src/db/db.js';
 import http from 'http';
-import cors from "cors"
+
 // Create an HTTP server using the Express app
 const httpServer = http.createServer(app);
 
