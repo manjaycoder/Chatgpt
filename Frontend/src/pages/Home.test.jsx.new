@@ -1,0 +1,316 @@
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import userEvent from '@testing-library/user-event';
+import Home from './Home';
+import chatReducer from '../store/chatSlice';
+
+// Mock CSS imports
+jest.mock('../components/chat/ChatLayout.css', () => ({}));
+
+// Mock socket.io-client
+const mockSocket = {
+  on: jest.fn(),
+  emit: jest.fn(),
+  disconnect: jest.fn(),
+};
+
+jest.mock('socket.io-client', () => ({
+  io: jest.fn(() => mockSocket)
+}));
+
+// Mock axios
+jest.mock('axios');
+
+// Mock child components
+jest.mock('../components/chat/ChatMobileBar.jsx', () => {
+  return {
+    __esModule: true,
+    default: function MockChatMobileBar({ onToggleSidebar, onNewChat }) {
+      return (
+        <div data-testid="chat-mobile-bar">
+          <button onClick={onToggleSidebar} data-testid="toggle-sidebar-btn">
+            Toggle Sidebar
+          </button>
+          <button onClick={onNewChat} data-testid="new-chat-btn">
+            New Chat
+          </button>
+        </div>
+      );
+    }
+  };
+});
+
+jest.mock('../components/chat/ChatSidebar.jsx', () => {
+  return {
+    __esModule: true,
+    default: function MockChatSidebar({ chats, onSelectChat, onNewChat }) {
+      return (
+        <div data-testid="chat-sidebar">
+          {chats.map(chat => (
+            <div 
+              key={chat._id} 
+              onClick={() => onSelectChat(chat._id)}
+              data-testid={`chat-${chat._id}`}
+            >
+              {chat.title}
+            </div>
+          ))}
+          <button onClick={onNewChat} data-testid="sidebar-new-chat-btn">
+            New Chat
+          </button>
+        </div>
+      );
+    }
+  };
+});
+
+jest.mock('../components/chat/ChatMessages.jsx', () => {
+  return {
+    __esModule: true,
+    default: function MockChatMessages({ messages }) {
+      return (
+        <div data-testid="chat-messages">
+          {messages.map((msg, i) => (
+            <div key={i} data-testid={`message-${msg.type}`}>
+              {msg.content}
+            </div>
+          ))}
+        </div>
+      );
+    }
+  };
+});
+
+jest.mock('../components/chat/ChatComposer.jsx', () => {
+  return {
+    __esModule: true,
+    default: function MockChatComposer({ input, setInput, onSend, isSending }) {
+      return (
+        <div data-testid="chat-composer">
+          <input
+            data-testid="chat-input"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            disabled={isSending}
+          />
+          <button 
+            onClick={onSend}
+            disabled={isSending}
+            data-testid="send-message-btn"
+          >
+            Send
+          </button>
+        </div>
+      );
+    }
+  };
+});
+
+describe('Home Component', () => {
+  let store;
+  const mockChats = [
+    { _id: '1', title: 'Chat 1' },
+    { _id: '2', title: 'Chat 2' }
+  ];
+
+  beforeEach(() => {
+    // Reset all mocks
+    jest.clearAllMocks();
+    
+    // Setup Redux store with initial state
+    store = configureStore({
+      reducer: {
+        chat: chatReducer
+      },
+      preloadedState: {
+        chat: {
+          chats: [],
+          activeChatId: null,
+          input: '',
+          isSending: false
+        }
+      }
+    });
+
+    // Mock successful API responses
+    const axios = require('axios');
+    axios.get.mockImplementation((url) => {
+      if (url.includes('/api/chat/')) {
+        return Promise.resolve({ data: { chats: mockChats } });
+      }
+      if (url.includes('/api/chat/messages/')) {
+        return Promise.resolve({ data: { messages: [] } });
+      }
+      return Promise.reject(new Error('Not found'));
+    });
+  });
+
+  test('renders chat interface components', async () => {
+    render(
+      <Provider store={store}>
+        <Home />
+      </Provider>
+    );
+
+    expect(screen.getByTestId('chat-layout')).toBeInTheDocument();
+    expect(screen.getByTestId('chat-mobile-bar')).toBeInTheDocument();
+    expect(screen.getByTestId('chat-sidebar')).toBeInTheDocument();
+    
+    await waitFor(() => {
+      expect(store.getState().chat.chats).toHaveLength(2);
+    });
+  });
+
+  test('toggles sidebar when mobile bar button is clicked', async () => {
+    render(
+      <Provider store={store}>
+        <Home />
+      </Provider>
+    );
+
+    const toggleButton = screen.getByTestId('toggle-sidebar-btn');
+    const sidebar = screen.getByTestId('chat-sidebar');
+    
+    expect(sidebar).not.toHaveClass('open');
+    
+    fireEvent.click(toggleButton);
+    expect(sidebar).toHaveClass('open');
+    
+    fireEvent.click(toggleButton);
+    expect(sidebar).not.toHaveClass('open');
+  });
+
+  test('creates new chat when new chat button is clicked', async () => {
+    const axios = require('axios');
+    const newChat = { _id: '3', title: 'New Chat' };
+    axios.post.mockResolvedValueOnce({ data: { chat: newChat } });
+    
+    // Mock window.prompt
+    const mockPrompt = jest.fn(() => 'New Chat');
+    window.prompt = mockPrompt;
+
+    render(
+      <Provider store={store}>
+        <Home />
+      </Provider>
+    );
+
+    const newChatBtn = screen.getByTestId('new-chat-btn');
+    fireEvent.click(newChatBtn);
+
+    expect(mockPrompt).toHaveBeenCalledWith(
+      'Enter a title for the new chat:',
+      ''
+    );
+    
+    await waitFor(() => {
+      expect(axios.post).toHaveBeenCalledWith(
+        'http://localhost:3000/api/chat/',
+        { title: 'New Chat' },
+        { withCredentials: true }
+      );
+    });
+  });
+
+  test('sends message and handles AI response', async () => {
+    // Set up active chat in store
+    store = configureStore({
+      reducer: { chat: chatReducer },
+      preloadedState: {
+        chat: {
+          chats: mockChats,
+          activeChatId: '1',
+          input: '',
+          isSending: false
+        }
+      }
+    });
+
+    render(
+      <Provider store={store}>
+        <Home />
+      </Provider>
+    );
+
+    // Type a message
+    const input = screen.getByTestId('chat-input');
+    await userEvent.type(input, 'Hello AI');
+    
+    // Send the message
+    const sendButton = screen.getByTestId('send-message-btn');
+    fireEvent.click(sendButton);
+
+    // Verify socket emission
+    expect(mockSocket.emit).toHaveBeenCalledWith('ai-message', {
+      chat: '1',
+      content: 'Hello AI'
+    });
+
+    // Simulate AI response
+    const aiResponseHandler = mockSocket.on.mock.calls.find(
+      call => call[0] === 'ai-response'
+    )[1];
+    
+    aiResponseHandler({ chat: '1', content: 'Hello human' });
+
+    // Verify messages in UI
+    await waitFor(() => {
+      expect(screen.getByTestId('message-user')).toHaveTextContent('Hello AI');
+      expect(screen.getByTestId('message-ai')).toHaveTextContent('Hello human');
+    });
+
+    // Verify Redux store
+    expect(store.getState().chat.input).toBe('');
+    expect(store.getState().chat.isSending).toBe(false);
+  });
+
+  test('loads chat messages when selecting a chat', async () => {
+    const axios = require('axios');
+    const mockMessages = [
+      { role: 'user', content: 'Hello' },
+      { role: 'ai', content: 'Hi there' }
+    ];
+    
+    axios.get.mockImplementation((url) => {
+      if (url.includes('/api/chat/messages/')) {
+        return Promise.resolve({ data: { messages: mockMessages } });
+      }
+      return Promise.resolve({ data: { chats: mockChats } });
+    });
+
+    render(
+      <Provider store={store}>
+        <Home />
+      </Provider>
+    );
+
+    // Wait for chats to load
+    await waitFor(() => {
+      expect(screen.getByTestId('chat-1')).toBeInTheDocument();
+    });
+
+    // Select a chat
+    fireEvent.click(screen.getByTestId('chat-1'));
+
+    // Verify messages are loaded
+    await waitFor(() => {
+      const messages = screen.getAllByTestId(/message-/);
+      expect(messages).toHaveLength(2);
+      expect(messages[0]).toHaveTextContent('Hello');
+      expect(messages[1]).toHaveTextContent('Hi there');
+    });
+  });
+
+  test('cleans up socket connection on unmount', () => {
+    const { unmount } = render(
+      <Provider store={store}>
+        <Home />
+      </Provider>
+    );
+
+    unmount();
+    expect(mockSocket.disconnect).toHaveBeenCalled();
+  });
+});

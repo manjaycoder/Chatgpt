@@ -1,10 +1,27 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { VitePWA } from 'vite-plugin-pwa'
-
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import { VitePWA } from "vite-plugin-pwa";
+import tailwindcss from "@tailwindcss/vite";
 // https://vite.dev/config/
 export default defineConfig({
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ["./src/setupTests.js"],
+    css: true,
+    deps: {
+      inline: [/vitest/],
+    },
+    mockReset: true,
+    restoreMocks: true,
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/.{idea,git,cache,output,temp}/**",
+    ],
+  },
   plugins: [
+    tailwindcss(),
     react(),
     VitePWA({
       manifest: {
@@ -80,4 +97,12 @@ export default defineConfig({
       registerType: "autoUpdate",
     }),
   ],
-})
+
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ["./src/test-setup.js"],
+    include: ["**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}"], // Includes .js
+    css: true,
+  },
+});

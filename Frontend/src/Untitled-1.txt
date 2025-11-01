@@ -1,0 +1,6 @@
+<div data-testid="chat-layout">
+<form data-testid="chat-form">
+<input data-testid="chat-input">
+<div data-testid="chat-mobile-bar">
+<div data-testid="chat-sidebar">
+<div data-testid="chat-composer">

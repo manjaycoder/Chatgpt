@@ -7,7 +7,6 @@ import { Provider } from 'react-redux'
 import store from './store/store.js'
 
 
-
 registerSW()
 createRoot(document.getElementById('root')).render(
   <StrictMode>

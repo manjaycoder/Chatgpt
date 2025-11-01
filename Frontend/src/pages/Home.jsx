@@ -29,13 +29,11 @@ const Home = () => {
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
 
-  
-
   // ✅ Fetch chats once
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const res = await axios.get("https://chatgpt-1-px0b.onrender.com/api/chat/", {
+        const res = await axios.get("http://localhost:3000/api/chat/", {
           withCredentials: true,
         });
         dispatch(setChats(res.data.chats.reverse()));
@@ -48,7 +46,7 @@ const Home = () => {
 
   // ✅ Connect socket ONCE
   useEffect(() => {
-    const tempSocket = io("https://chatgpt-1-px0b.onrender.com", {
+    const tempSocket = io("http://localhost:3000", {
       withCredentials: true,
     });
 
@@ -76,7 +74,7 @@ const Home = () => {
   const getMessages = useCallback(async (chatId) => {
     try {
       const res = await axios.get(
-        `https://chatgpt-1-px0b.onrender.com/api/chat/messages/${chatId}`,
+        `http://localhost:3000/api/chat/messages/${chatId}`,
         { withCredentials: true }
       );
 
@@ -99,7 +97,7 @@ const Home = () => {
 
     try {
       const res = await axios.post(
-        "https://chatgpt-1-px0b.onrender.com/api/chat/",
+        "http://localhost:3000/api/chat/",
         { title },
         { withCredentials: true }
       );
@@ -136,22 +134,26 @@ const Home = () => {
   };
 
   return (
-    <div className="chat-layout minimal">
-      <ChatMobileBar
-        onToggleSidebar={() => setSidebarOpen((o) => !o)}
-        onNewChat={handleNewChat}
-      />
-      <ChatSidebar
-        chats={chats}
-        activeChatId={activeChatId}
-        onSelectChat={(id) => {
-          dispatch(selectChat(id));
-          setSidebarOpen(false);
-          getMessages(id);
-        }}
-        onNewChat={handleNewChat}
-        open={sidebarOpen}
-      />
+    <div className="chat-layout minimal" data-testid="chat-layout">
+      <div data-testid="chat-mobile-bar">
+        <ChatMobileBar
+          onToggleSidebar={() => setSidebarOpen((o) => !o)}
+          onNewChat={handleNewChat}
+        />
+      </div>
+      <div data-testid="chat-sidebar" className={sidebarOpen ? "open" : ""}>
+        <ChatSidebar
+          chats={chats}
+          activeChatId={activeChatId}
+          onSelectChat={(id) => {
+            dispatch(selectChat(id));
+            setSidebarOpen(false);
+            getMessages(id);
+          }}
+          onNewChat={handleNewChat}
+          open={sidebarOpen}
+        />
+      </div>
       <main className="chat-main" role="main">
         {messages.length === 0 && (
           <div className="chat-welcome" aria-hidden="true">
@@ -166,12 +168,14 @@ const Home = () => {
         )}
         <ChatMessages messages={messages} isSending={isSending} />
         {activeChatId && (
-          <ChatComposer
-            input={input}
-            setInput={(v) => dispatch(setInput(v))}
-            onSend={sendMessage}
-            isSending={isSending}
-          />
+          <div data-testid="chat-composer">
+            <ChatComposer
+              input={input}
+              setInput={(v) => dispatch(setInput(v))}
+              onSend={sendMessage}
+              isSending={isSending}
+            />
+          </div>
         )}
       </main>
       {sidebarOpen && (
