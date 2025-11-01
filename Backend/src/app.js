@@ -5,6 +5,7 @@ import cors from "cors";
 import authRoute from "../src/routes/auth.routes.js"; // Fixed path (removed extra quotes if needed)
 import chatRoute from "../src/routes/chat.routes.js"; // Fixed path
 const app = express();
+
 // CORS Configuration: Essential for frontend requests with credentials (cookies)
 app.use(
   cors({
@@ -19,6 +20,9 @@ app.use(
     exposedHeaders: ["Set-Cookie"], // Expose cookies in responses if needed
   })
 );
+
+// Serve static files (e.g., CSS/JS/images from public/)
+app.use(express.static(path.join(__dirname, "../public")));  // Uses polyfilled __dirname
 
 // Middleware
 app.use(express.json({ limit: "10mb" })); // Parse JSON bodies (added limit for safety)
