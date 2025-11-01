@@ -1,0 +1,120 @@
+import React from "react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { vi } from "vitest";
+import Home from "./Home";
+import { renderWithProviders } from "../test/test-utils";
+
+// Mock socket.io-client
+vi.mock("socket.io-client", () => ({
+  default: vi.fn(() => ({
+    on: vi.fn(),
+    emit: vi.fn(),
+    disconnect: vi.fn(),
+  })),
+}));
+
+// Mock axios
+vi.mock("axios", () => ({
+  post: vi.fn(),
+}));
+
+// Mock child components
+vi.mock("../components/chat/ChatMessages.jsx", () => ({
+  default: ({ messages, isSending }) => (
+    <div data-testid="chat-messages">
+      {messages.map((msg, i) => (
+        <div key={i} data-testid={`message-${i}`}>
+          {msg.content}
+          {isSending && i === messages.length - 1 && <span>sending...</span>}
+        </div>
+      ))}
+    </div>
+  ),
+}));
+
+vi.mock("../components/chat/ChatMobileBar.jsx", () => ({
+  default: ({ onToggleSidebar, onNewChat }) => (
+    <div data-testid="chat-mobile-bar">
+      <button onClick={onToggleSidebar}>Toggle</button>
+      <button onClick={onNewChat}>New Chat</button>
+    </div>
+  ),
+}));
+
+describe("Home Component", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("renders chat interface", () => {
+    renderWithProviders(<Home />);
+    expect(screen.getByTestId("chat-container")).toBeInTheDocument();
+    expect(screen.getByTestId("chat-messages")).toBeInTheDocument();
+    expect(screen.getByTestId("message-input")).toBeInTheDocument();
+  });
+
+  it("handles message input and submission", async () => {
+    const mockStore = {
+      getState: () => ({
+        chat: {
+          messages: [],
+          isSending: false,
+          currentChat: { id: "123" },
+        },
+      }),
+      dispatch: vi.fn(),
+    };
+
+    renderWithProviders(<Home />, { store: mockStore });
+
+    const input = screen.getByTestId("message-input");
+    const form = screen.getByTestId("chat-form");
+
+    fireEvent.change(input, { target: { value: "Hello world" } });
+    fireEvent.submit(form);
+
+    expect(mockStore.dispatch).toHaveBeenCalled();
+    expect(input.value).toBe("");
+  });
+
+  it("displays sending indicator", () => {
+    const mockStore = {
+      getState: () => ({
+        chat: {
+          messages: [{ id: "1", content: "Hello", role: "user" }],
+          isSending: true,
+          currentChat: { id: "123" },
+        },
+      }),
+      dispatch: vi.fn(),
+    };
+
+    renderWithProviders(<Home />, { store: mockStore });
+
+    expect(screen.getByText("sending...")).toBeInTheDocument();
+  });
+
+  it("handles mobile sidebar toggle", () => {
+    const mockStore = {
+      getState: () => ({
+        chat: {
+          messages: [],
+          isSending: false,
+          currentChat: { id: "123" },
+        },
+      }),
+      dispatch: vi.fn(),
+    };
+
+    renderWithProviders(<Home />, { store: mockStore });
+
+    const toggleButton = screen.getByText("Toggle");
+    fireEvent.click(toggleButton);
+
+    expect(mockStore.dispatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: expect.stringContaining("TOGGLE_SIDEBAR"),
+      })
+    );
+  });
+});

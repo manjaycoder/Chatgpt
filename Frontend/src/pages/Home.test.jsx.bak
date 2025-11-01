@@ -1,0 +1,305 @@
+import React from "react";
+import { screen, fireEvent, waitFor, act } from "@testing-library/react";
+import { vi } from "vitest";
+import axios from "axios";
+import Home from "./Home";
+import { renderWithProviders } from "../test/test-utils";
+import { io } from "socket.io-client";
+
+// Mock socket.io-client
+const mockSocket = {
+  on: vi.fn(),
+  emit: vi.fn(),
+  disconnect: vi.fn(),
+};
+
+vi.mock("socket.io-client", () => ({
+  io: vi.fn(() => mockSocket),
+}));
+
+// Mock ChatMessages component
+vi.mock("../components/chat/ChatMessages.jsx", () => ({
+  default: ({ messages, isSending }) => (
+    <div data-testid="chat-messages">
+      {messages.map((msg, i) => (
+        <div key={i} data-testid={`message-${i}`}>
+          {msg.content}
+        </div>
+      ))}
+      {isSending && <div data-testid="sending-indicator">Sending...</div>}
+    </div>
+  ),
+}));
+
+// Mock ChatComposer component
+vi.mock("../components/chat/ChatComposer.jsx", () => ({
+  default: ({ input, setInput, onSend, isSending }) => (
+    <div data-testid="chat-composer">
+      <input
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        data-testid="chat-input"
+      />
+      <button onClick={onSend} disabled={isSending} data-testid="send-button">
+        Send
+      </button>
+    </div>
+  ),
+}));
+
+// Mock ChatSidebar component
+vi.mock("../components/chat/ChatSidebar.jsx", () => ({
+  default: ({ chats, activeChatId, onSelectChat, onNewChat, open }) => (
+    <div data-testid="chat-sidebar" className={open ? "open" : ""}>
+      <button onClick={onNewChat} data-testid="new-chat-sidebar">
+        New Chat
+      </button>
+      {chats.map((chat) => (
+        <div
+          key={chat._id}
+          onClick={() => onSelectChat(chat._id)}
+          data-testid={`chat-${chat._id}`}
+          className={activeChatId === chat._id ? "active" : ""}
+        >
+          {chat.title}
+        </div>
+      ))}
+    </div>
+  ),
+}));
+
+// Mock ChatMobileBar component
+vi.mock("../components/chat/ChatMobileBar.jsx", () => ({
+  default: ({ onToggleSidebar, onNewChat }) => (
+    <div data-testid="chat-mobile-bar">
+      <button onClick={onToggleSidebar} data-testid="toggle-sidebar">
+        Toggle Sidebar
+      </button>
+      <button onClick={onNewChat} data-testid="new-chat-mobile">
+        New Chat
+      </button>
+    </div>
+  ),
+}));
+
+describe("Home Component", () => {
+  const mockChats = [
+    { _id: "chat1", title: "First Chat" },
+    { _id: "chat2", title: "Second Chat" },
+  ];
+
+  const mockMessages = [
+    { _id: "1", role: "user", content: "Hello" },
+    { _id: "2", role: "assistant", content: "Hi there!" },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    // Mock axios get for chats
+    vi.mocked(axios.get).mockImplementation((url) => {
+      if (url.includes("/api/chat/messages/")) {
+        return Promise.resolve({ data: { messages: mockMessages } });
+      }
+      return Promise.resolve({ data: { chats: mockChats } });
+    });
+
+    // Mock axios post for new chat
+    vi.mocked(axios.post).mockResolvedValue({
+      data: { chat: { _id: "new-chat", title: "New Chat" } },
+    });
+  });
+
+  const initialState = {
+    chat: {
+      chats: mockChats,
+      activeChatId: "chat1",
+      input: "",
+      isSending: false,
+    },
+  };
+
+  test("renders chat interface", () => {
+    renderWithProviders(<Home />, { preloadedState: initialState });
+
+    expect(screen.getByTestId("chat-layout")).toBeInTheDocument();
+    expect(screen.getByTestId("chat-composer")).toBeInTheDocument();
+    expect(screen.getByText("ChatGPT Clone")).toBeInTheDocument();
+  });
+
+  test("toggles sidebar on mobile bar click", () => {
+    renderWithProviders(<Home />, { preloadedState: initialState });
+
+    const toggleButton = screen.getByTestId("toggle-sidebar");
+    const sidebar = screen.getByTestId("chat-sidebar");
+
+    // Open sidebar
+    fireEvent.click(toggleButton);
+    expect(sidebar).toHaveClass("open");
+
+    // Close sidebar
+    fireEvent.click(toggleButton);
+    expect(sidebar).not.toHaveClass("open");
+  });
+
+  test("creates new chat from mobile bar", async () => {
+    // Mock prompt
+    window.prompt = vi.fn().mockReturnValue("Test Chat Title");
+
+    renderWithProviders(<Home />, { preloadedState: initialState });
+
+    const newChatButton = screen.getByTestId("new-chat-mobile");
+
+    await act(async () => {
+      fireEvent.click(newChatButton);
+    });
+
+    expect(window.prompt).toHaveBeenCalledWith(
+      "Enter a title for the new chat:",
+      ""
+    );
+    expect(axios.post).toHaveBeenCalledWith(
+      "http://localhost:3000/api/chat/",
+      { title: "Test Chat Title" },
+      { withCredentials: true }
+    );
+  });
+
+  test("creates new chat from sidebar", async () => {
+    // Mock prompt
+    window.prompt = vi.fn().mockReturnValue("Sidebar Chat Title");
+
+    renderWithProviders(<Home />, { preloadedState: initialState });
+
+    // Open sidebar first
+    fireEvent.click(screen.getByTestId("toggle-sidebar"));
+
+    const newChatButton = screen.getByTestId("new-chat-sidebar");
+
+    await act(async () => {
+      fireEvent.click(newChatButton);
+    });
+
+    expect(axios.post).toHaveBeenCalledWith(
+      "http://localhost:3000/api/chat/",
+      { title: "Sidebar Chat Title" },
+      { withCredentials: true }
+    );
+  });
+
+  test("sends message when send button is clicked", async () => {
+    renderWithProviders(<Home />, { preloadedState: initialState });
+
+    const input = screen.getByTestId("chat-input");
+    const sendButton = screen.getByTestId("send-button");
+
+    // Type a message
+    fireEvent.change(input, { target: { value: "Hello AI" } });
+
+    await act(async () => {
+      fireEvent.click(sendButton);
+    });
+
+    // Check if socket emit was called
+    expect(mockSocket.emit).toHaveBeenCalledWith("ai-message", {
+      chat: "chat1",
+      content: "Hello AI",
+    });
+  });
+
+  test("does not send empty message", async () => {
+    renderWithProviders(<Home />, { preloadedState: initialState });
+
+    const input = screen.getByTestId("chat-input");
+    const sendButton = screen.getByTestId("send-button");
+
+    // Try to send empty message
+    fireEvent.change(input, { target: { value: "   " } });
+
+    await act(async () => {
+      fireEvent.click(sendButton);
+    });
+
+    expect(mockSocket.emit).not.toHaveBeenCalled();
+  });
+
+  test("selects chat from sidebar", async () => {
+    renderWithProviders(<Home />, { preloadedState: initialState });
+
+    // Open sidebar
+    fireEvent.click(screen.getByTestId("toggle-sidebar"));
+
+    const chatItem = screen.getByTestId("chat-chat2");
+
+    await act(async () => {
+      fireEvent.click(chatItem);
+    });
+
+    // Check if messages were fetched for the selected chat
+    expect(axios.get).toHaveBeenCalledWith(
+      "http://localhost:3000/api/chat/messages/chat2",
+      { withCredentials: true }
+    );
+  });
+
+  test("handles socket AI response", async () => {
+    renderWithProviders(<Home />, { preloadedState: initialState });
+
+    // Simulate socket AI response
+    const aiResponseHandler = mockSocket.on.mock.calls.find(
+      (call) => call[0] === "ai-response"
+    )[1];
+
+    await act(async () => {
+      aiResponseHandler({
+        chat: "chat1",
+        content: "This is AI response",
+      });
+    });
+
+    // Check if the AI response is displayed
+    await waitFor(() => {
+      expect(screen.getByText("This is AI response")).toBeInTheDocument();
+    });
+  });
+
+  test("fetches chats on component mount", async () => {
+    await act(async () => {
+      renderWithProviders(<Home />, { preloadedState: initialState });
+    });
+
+    expect(axios.get).toHaveBeenCalledWith("http://localhost:3000/api/chat/", {
+      withCredentials: true,
+    });
+  });
+
+  test("does not show composer when no active chat", () => {
+    const stateWithoutActiveChat = {
+      chat: {
+        ...initialState.chat,
+        activeChatId: null,
+      },
+    };
+
+    renderWithProviders(<Home />, { preloadedState: stateWithoutActiveChat });
+
+    expect(screen.queryByTestId("chat-composer")).not.toBeInTheDocument();
+  });
+
+  test("closes sidebar when backdrop is clicked", () => {
+    renderWithProviders(<Home />, { preloadedState: initialState });
+
+    // Open sidebar first
+    fireEvent.click(screen.getByTestId("toggle-sidebar"));
+
+    const backdrop = screen.getByLabelText("Close sidebar");
+    const sidebar = screen.getByTestId("chat-sidebar");
+
+    expect(sidebar).toHaveClass("open");
+
+    fireEvent.click(backdrop);
+
+    expect(sidebar).not.toHaveClass("open");
+  });
+});

@@ -5,7 +5,7 @@ import expressAsyncHandler from "express-async-handler";
 
 const asyncHandler = expressAsyncHandler;
 
-const RegisterUser  = asyncHandler(async (req, res) => {
+const RegisterUser = asyncHandler(async (req, res) => {
   const {
     fullName: { firstName, lastName },
     email,
@@ -27,7 +27,7 @@ const RegisterUser  = asyncHandler(async (req, res) => {
     email,
     password: hashPassword,
   });
-   console.log(user)
+  console.log(user);
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
 
   res.cookie("token", token, { httpOnly: true });
@@ -41,7 +41,7 @@ const RegisterUser  = asyncHandler(async (req, res) => {
   });
 });
 
-const loginUser  = asyncHandler(async (req, res) => {
+const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const user = await userModel.findOne({ email });
@@ -67,4 +67,4 @@ const loginUser  = asyncHandler(async (req, res) => {
   });
 });
 
-export { RegisterUser , loginUser  };
+export { RegisterUser, loginUser };
