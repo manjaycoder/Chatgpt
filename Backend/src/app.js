@@ -33,4 +33,4 @@ app.use(cookieParser()); // Parse cookies (already good for auth)
 app.use("/api/auth", authRoute);
 app.use("/api/chat", chatRoute);
 // Optional: Health check endpoint for testing
-export default app;
+export default app
