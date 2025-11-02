@@ -29,16 +29,13 @@ app.use(
 // Serve static files (e.g., CSS/JS/images from public/)
 app.use(express.static(path.join(__dirname, "../public")));  // Uses polyfilled __dirname
 
-
-
-
 // Middleware
 app.use(express.json({ limit: "10mb" })); // Parse JSON bodies (added limit for safety)
 
-app.use(cookieParser()); // Parse cookies (already good for auth)
+app.use(cookieParser()) // Parse cookies (already good for auth)
 // Routes
 
-app.use("/api/auth", authRoute);
+app.use("/api/auth", authRoute)
 app.use("/api/chat", chatRoute);
 // Optional: Health check endpoint for testing
-export default app
+export default app;
