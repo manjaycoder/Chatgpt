@@ -30,7 +30,11 @@ const RegisterUser = asyncHandler(async (req, res) => {
   console.log(user);
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
 
-  res.cookie("token", token, { httpOnly: true });
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // true if using HTTPS
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
   res.status(201).json({
     message: "User  registered successfully",
     user: {
@@ -56,7 +60,11 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
 
-  res.cookie("token", token, { httpOnly: true });
+  res.cookie("token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production", // true if using HTTPS
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
   res.status(200).json({
     message: "Login successful",
     user: {
