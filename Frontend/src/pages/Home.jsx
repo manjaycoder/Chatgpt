@@ -122,10 +122,14 @@ const Home = () => {
     dispatch(setInput(""));
 
     try {
-      socket.emit("ai-message", {
-        chat: activeChatId,
-        content: trimmed,
-      });
+      if (socket && typeof socket.emit === "function") {
+        socket.emit("ai-message", {
+          chat: activeChatId,
+          content: trimmed,
+        });
+      } else {
+        throw new Error("Socket not connected");
+      }
     } catch (err) {
       console.error("Socket emit error:", err);
       dispatch(addAIMessage(activeChatId, "Error sending message.", true));
