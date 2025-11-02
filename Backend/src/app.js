@@ -8,10 +8,10 @@ import authRoute from "../src/routes/auth.routes.js";
 import chatRoute from "../src/routes/chat.routes.js";
 
 const app = express();
-
-// Fix __dirname in ES module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+
 
 // ✅ CORS Configuration
 app.use(
