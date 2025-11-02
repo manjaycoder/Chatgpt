@@ -1,10 +1,15 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
+
 
 import authRoute from "../src/routes/auth.routes.js"; // Fixed path (removed extra quotes if needed)
 import chatRoute from "../src/routes/chat.routes.js"; // Fixed path
 const app = express();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // CORS Configuration: Essential for frontend requests with credentials (cookies)
 app.use(
@@ -23,6 +28,9 @@ app.use(
 
 // Serve static files (e.g., CSS/JS/images from public/)
 app.use(express.static(path.join(__dirname, "../public")));  // Uses polyfilled __dirname
+
+
+
 
 // Middleware
 app.use(express.json({ limit: "10mb" })); // Parse JSON bodies (added limit for safety)
