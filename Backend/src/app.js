@@ -16,6 +16,7 @@ const __dirname = path.dirname(__filename);
 // ✅ CORS Configuration
 app.use(
   cors({
+    
     origin: [
       "https://chatgpt-2-0-esui.onrender.com", // Update to your frontend origin if different
       "http://localhost:3000", // Optional: for local dev
