@@ -24,7 +24,7 @@ app.use(
 // Middleware
 app.use(express.json({ limit: "10mb" })); // Parse JSON bodies (added limit for safety)
 
-app.use(cookieParser()); // Parse cookies (already good for auth)
+app.use(cookieParser()) // Parse cookies (already good for auth)
 // Routes
 
 app.use("/api/auth", authRoute);
