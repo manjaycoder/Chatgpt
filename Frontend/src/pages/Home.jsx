@@ -33,7 +33,7 @@ const Home = () => {
   useEffect(() => {
     const fetchChats = async () => {
       try {
-        const res = await axios.get("https://chatgpt-4-s8b8.onrender.com/api/chat/", {
+        const res = await axios.get("https://chatgpt-3-83v5.onrender.com/api/chat/", {
           withCredentials: true,
         });
         dispatch(setChats(res.data.chats.reverse()));
@@ -46,7 +46,7 @@ const Home = () => {
 
   // ✅ Connect socket ONCE
   useEffect(() => {
-    const tempSocket = io("https://chatgpt-4-s8b8.onrender.com", {
+    const tempSocket = io("https://chatgpt-3-83v5.onrender.com", {
       withCredentials: true,
     });
 
@@ -74,7 +74,7 @@ const Home = () => {
   const getMessages = useCallback(async (chatId) => {
     try {
       const res = await axios.get(
-        `https://chatgpt-4-s8b8.onrender.com/api/chat/messages/${chatId}`,
+        `https://chatgpt-3-83v5.onrender.com/api/chat/messages/${chatId}`,
         { withCredentials: true }
       );
 
@@ -97,7 +97,7 @@ const Home = () => {
 
     try {
       const res = await axios.post(
-        "https://chatgpt-4-s8b8.onrender.com/api/chat/",
+        "https://chatgpt-3-83v5.onrender.com/api/chat/",
         { title },
         { withCredentials: true }
       );
