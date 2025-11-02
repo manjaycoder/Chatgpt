@@ -8,7 +8,7 @@ import messageModel from "../models/message.model.js";
      function initSocketServer(httpServer) {
        const io = new Server(httpServer, {
          cors: {
-           origin: "https://chatgpt-4-s8b8.onrender.com", // Replace with your client origin (e.g., "http://localhost:3001") for production security
+           origin: "https://chatgpt-2-0-esui.onrender.com/", // Replace with your client origin (e.g., "http://localhost:3001") for production security
            credentials: true // Allows cookies/credentials from cross-origin
          },
          transports: ["polling", "websocket"], // Force polling first for cookie transmission, then upgrade
